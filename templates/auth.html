@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}{{ 'Register' if mode=='register' else 'Sign in' }}{% endblock %}
+{% block body %}
+{% set reg = mode=='register' %}
+<div class="auth"><div class="brandp"><div class="brand"><span class="logo">A</span>Assignment Portal</div>
+<div><h1>Review, feedback and resubmission in one place.</h1><p>A focused workflow for teachers and students, with a complete history of every submitted version.</p></div>
+<ul><li>Clear status: Pending, Accepted or Needs Changes</li><li>Written feedback and marks per submission</li><li>Full version history for every assignment</li></ul></div>
+<div class="formp"><button class="sec theme" type="button" onclick="flip()">Theme</button><div class="card">
+<div class="seg"><a class="btn {{ 'sec' }}" style="text-align:center;{{ 'background:var(--card);color:var(--tx)' if role=='student' else 'border:0;background:transparent;color:var(--mu)' }}" href="{{ url_for(mode, role='student') }}">Student</a>
+<a class="btn" style="text-align:center;{{ 'background:var(--card);color:var(--tx)' if role=='teacher' else 'border:0;background:transparent;color:var(--mu)' }}" href="{{ url_for(mode, role='teacher') }}">Teacher</a></div>
+<h1 style="font-size:20px">{{ 'Create ' ~ role ~ ' account' if reg else 'Sign in as ' ~ role }}</h1>
+<p class="mu" style="margin:2px 0 0">{{ 'Enter your details to get started.' if reg else 'Welcome back. Enter your credentials.' }}</p>
+{% for cat, m in get_flashed_messages(with_categories=true) %}<div class="err">{{ m }}</div>{% endfor %}
+<form method="post"><input type="hidden" name="csrf" value="{{ csrf }}">
+{% if reg %}<label>Full name</label><input name="name" required autocomplete="name">{% endif %}
+<label>Email</label><input name="email" type="email" required autocomplete="email">
+<label>Password</label><input name="password" type="password" required minlength="{{ 6 if reg else 1 }}" autocomplete="{{ 'new-password' if reg else 'current-password' }}">
+<button style="width:100%;margin-top:16px">{{ 'Create account' if reg else 'Sign in' }}</button></form>
+<p class="mu" style="margin:16px 0 0;text-align:center">{{ 'Already registered?' if reg else 'New here?' }}
+<a href="{{ url_for('login' if reg else 'register', role=role) }}" style="color:var(--pr);font-weight:600;text-decoration:none">{{ 'Sign in' if reg else 'Create an account' }}</a></p>
+</div></div></div>{% endblock %}

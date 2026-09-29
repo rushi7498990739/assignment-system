@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% from "_macros.html" import badge, history %}
+{% block h1 %}Review dashboard{% endblock %}
+{% block sub %}Post assignments, review submissions and give feedback.{% endblock %}
+{% block content %}
+<div class="stats">{% set sm={'Pending':'Pending','Accepted':'Accepted','Needs changes':'Needs Changes'} %}{% for k,v in stats %}<div class="stat{{ ' click' if sm.get(k) }}" data-status="{{ sm.get(k,'') }}" title="{{ 'Click to filter' if sm.get(k) }}"><b data-n="{{ v }}">{{ v }}</b><span>{{ k }}</span></div>{% endfor %}</div>
+<div class="card"><h3>Create assignment</h3><p class="mu" style="margin:2px 0 0">Students will see it on their dashboard immediately.</p>
+<form method="post" action="{{ url_for('add_assignment') }}"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Title</label><input name="title" required><label>Description / instructions</label><textarea name="description" style="min-height:60px"></textarea>
+<div class="two"><div><label>Due date</label><input name="due" type="datetime-local"></div><div><label>Max marks</label><input name="max_marks" type="number" min="1" value="100"></div></div>
+<div style="margin-top:12px"><button>Post assignment</button></div></form></div>
+{% if assignments %}<div class="card"><h3>Posted assignments</h3>
+{% for a in assignments %}<div class="row" style="margin-top:8px"><span>{{ a.title }} <span class="mu">· {{ counts[a.id] }} submission(s){% if a.due %} · due {{ a.due|dt }}{% endif %}</span></span>
+<form method="post" action="{{ url_for('delete_assignment', aid=a.id) }}" onsubmit="return confirm('Delete this assignment and all its submissions?')"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="danger">Delete</button></form></div>{% endfor %}</div>{% endif %}
+<h2>Submissions to review</h2>
+<form method="get" class="tools" id="filters"><input name="q" id="q" autocomplete="off" placeholder="Search student or assignment" value="{{ f.q }}">
+<select name="status">{% for o in ['All','Pending','Accepted','Needs Changes'] %}<option {{ 'selected' if o==f.status }}>{{ o }}</option>{% endfor %}</select>
+<select name="aid"><option value="All">All assignments</option>{% for a in assignments %}<option value="{{ a.id }}" {{ 'selected' if f.aid==a.id|string }}>{{ a.title }}</option>{% endfor %}</select>
+<select name="sort">{% for v,t in [('new','Newest'),('old','Oldest'),('name','Student A–Z')] %}<option value="{{ v }}" {{ 'selected' if f.sort==v }}>{{ t }}</option>{% endfor %}</select></form>
+<div id="subs"><div class="mu" style="margin-bottom:8px">{{ subs|length }} result{{ '' if subs|length==1 else 's' }}</div>
+{% for s in subs %}{% set l = s.latest %}
+<div class="card"><div class="row"><h3>{{ s.title }}</h3><span>{% if s.due and l.created_at > s.due %}<span class="badge Late">Late</span>{% endif %}{{ badge(s.status) }}</span></div>
+<div class="mu">{{ s.student }} · {{ s.email }} · v{{ l.n }} · {{ l.created_at|dt }}</div>
+<pre style="margin-top:8px">{{ l.content }}</pre>
+{% if l.file_path %}<a class="file" href="{{ url_for('download', vid=l.id) }}">Download: {{ l.file_name }} · {{ l.file_path|filesize }}</a>{% endif %}
+<details data-k="s{{ s.id }}" style="margin-top:10px"><summary class="btn sec">Review / history</summary><div style="margin-top:10px"><h3>Review version {{ l.n }}</h3>
+<form method="post" action="{{ url_for('review', sid=s.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Written feedback</label><textarea name="feedback" id="fb{{ s.id }}">{{ l.feedback or '' }}</textarea>
+<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">{% for t in ['Good work.','Add more detail.','Check your references.','Fix formatting.','Please explain your reasoning.'] %}<button type="button" class="chip" onclick="var e=document.getElementById('fb{{ s.id }}');e.value=(e.value?e.value.trim()+' ':'')+this.dataset.t" data-t="{{ t }}">+ {{ t }}</button>{% endfor %}</div>
+<div class="two"><div><label>Status</label><select name="status"><option {{ 'selected' if l.status=='Accepted' }}>Accepted</option><option {{ 'selected' if l.status!='Accepted' }}>Needs Changes</option></select></div>
+<div><label>Marks (out of {{ s.max_marks }})</label><input name="marks" type="number" step="any" min="0" max="{{ s.max_marks }}" value="{{ '%g'|format(l.marks) if l.marks is not none }}"></div></div>
+<div style="margin:12px 0"><button>Save review</button></div></form>
+<h3>Version history</h3>{{ history(s) }}</div></details></div>
+{% else %}<div class="card empty">No submissions match.</div>{% endfor %}</div>
+{% endblock %}

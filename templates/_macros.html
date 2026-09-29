@@ -1,0 +1,11 @@
+{% macro badge(st) %}<span class="badge {{ {'Needs Changes':'Needs','Not submitted':'None'}.get(st, st) }}">{{ st }}</span>{% endmacro %}
+{% macro history(s) %}
+{% for v in s.versions|reverse %}
+<div class="ver {{ 'latest' if loop.first }}">
+  <div class="row"><h3>Version {{ v.n }}{{ ' (latest)' if loop.first }}{% if s.due and v.created_at > s.due %}<span class="badge Late">Late</span>{% endif %}</h3><span class="mu">{{ v.created_at|dt }}</span></div>
+  <pre>{{ v.content }}</pre>
+  {% if v.file_path %}<a class="file" href="{{ url_for('download', vid=v.id) }}">Download: {{ v.file_name }} · {{ v.file_path|filesize }}</a>{% endif %}
+  {% if v.status %}<div class="fb"><div class="row"><span>{{ badge(v.status) }}</span><b>{% if v.marks is not none %}Marks: {{ '%g'|format(v.marks) }}/{{ s.max_marks }}{% endif %}</b></div>{{ v.feedback or 'No written feedback' }}<div class="mu">Reviewed {{ v.reviewed_at|dt }}</div></div>
+  {% else %}<div class="mu">Awaiting review</div>{% endif %}
+</div>{% endfor %}
+{% endmacro %}

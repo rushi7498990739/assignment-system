@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Assignment Portal{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script>document.documentElement.className='js';try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
+function flip(){var d=document.documentElement,dark=d.dataset.theme?d.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;d.dataset.theme=dark?'light':'dark';try{localStorage.setItem('theme',d.dataset.theme)}catch(e){}}</script>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head><body>
+{% block body %}
+<nav class="nav"><div class="brand"><span class="logo">A</span>Assignment Portal</div>
+<div class="navr"><div class="who"><span class="av">{{ (user.name.split()[:2]|map('first')|join(''))|upper }}</span><span><b>{{ user.name }}</b><small>{{ user.role|capitalize }}</small></span></div>
+<button class="sec" type="button" onclick="flip()">Theme</button>
+<form method="post" data-plain action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="sec">Sign out</button></form></div></nav>
+<main class="wrap">
+<div class="page-t"><h1>{% block h1 %}{% endblock %}</h1><p>{% block sub %}{% endblock %}</p></div>
+<div id="dyn" data-pending="{{ pending|default(0) }}">
+{% for cat, m in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</div>
+</main>{% endblock %}
+<div id="toasts" aria-live="polite"></div>
+</body></html>
